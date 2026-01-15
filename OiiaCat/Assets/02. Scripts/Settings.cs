@@ -10,6 +10,18 @@ using TMPro;
 /// </summary>
 public class Settings : MonoBehaviourPunCallbacks
 {
+    [Header("Menu Buttons")]
+    [SerializeField]
+    private Button _menuButton;
+    [SerializeField]
+    private Button _catButton;
+
+    [Header("UI Panels")]
+    [SerializeField]
+    private GameObject _menuPanel;
+    [SerializeField]
+    private GameObject _catPanel;
+
     [Header("Window Settings")]
     [SerializeField]
     private UniWindowController _uniwinc;
@@ -60,6 +72,28 @@ public class Settings : MonoBehaviourPunCallbacks
             _uniwinc = UniWindowController.current;
         }
 
+        // 메뉴 버튼 초기화
+        if (_menuButton != null)
+        {
+            _menuButton.onClick.AddListener(OnMenuButtonClicked);
+        }
+
+        // 고양이 버튼 초기화
+        if (_catButton != null)
+        {
+            _catButton.onClick.AddListener(OnCatButtonClicked);
+        }
+
+        // 패널 초기 상태 설정 (메뉴 패널 활성화)
+        if (_menuPanel != null)
+        {
+            _menuPanel.SetActive(true);
+        }
+        if (_catPanel != null)
+        {
+            _catPanel.SetActive(false);
+        }
+
         // 항상 위 토글 초기화
         if (_alwaysUpToggle != null)
         {
@@ -96,6 +130,38 @@ public class Settings : MonoBehaviourPunCallbacks
         if (_roomNameInputField != null)
         {
             _roomNameInputField.text = DEFAULT_ROOM_NAME;
+        }
+    }
+
+    /// <summary>
+    /// 메뉴 버튼 클릭 시 호출
+    /// </summary>
+    private void OnMenuButtonClicked()
+    {
+        ActivatePanel(_menuPanel);
+    }
+
+    /// <summary>
+    /// 고양이 버튼 클릭 시 호출
+    /// </summary>
+    private void OnCatButtonClicked()
+    {
+        ActivatePanel(_catPanel);
+    }
+
+    /// <summary>
+    /// 지정된 패널만 활성화하고 나머지는 비활성화
+    /// </summary>
+    /// <param name="panelToActivate">활성화할 패널</param>
+    private void ActivatePanel(GameObject panelToActivate)
+    {
+        if (_menuPanel != null)
+        {
+            _menuPanel.SetActive(_menuPanel == panelToActivate);
+        }
+        if (_catPanel != null)
+        {
+            _catPanel.SetActive(_catPanel == panelToActivate);
         }
     }
 
@@ -266,6 +332,16 @@ public class Settings : MonoBehaviourPunCallbacks
 
     private void OnDestroy()
     {
+        if (_menuButton != null)
+        {
+            _menuButton.onClick.RemoveListener(OnMenuButtonClicked);
+        }
+
+        if (_catButton != null)
+        {
+            _catButton.onClick.RemoveListener(OnCatButtonClicked);
+        }
+
         if (_alwaysUpToggle != null)
         {
             _alwaysUpToggle.onValueChanged.RemoveListener(OnAlwaysUpToggleChanged);
