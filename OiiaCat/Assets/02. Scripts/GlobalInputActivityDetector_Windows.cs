@@ -9,9 +9,14 @@ public class GlobalInputActivityDetector_Windows : MonoBehaviour
 {
     public event Action<uint> OnActivity; // "뭔가 입력이 있었다" 신호
 
-    [SerializeField] private bool runInBackground = true;
-    [SerializeField] private bool detectKeyboard = true;
-    [SerializeField] private bool detectMouseClick = true;
+    [SerializeField]
+    private bool runInBackground = true;
+
+    [SerializeField]
+    private bool detectKeyboard = true;
+
+    [SerializeField]
+    private bool detectMouseClick = true;
 
     private uint _activityCount = 0;
 

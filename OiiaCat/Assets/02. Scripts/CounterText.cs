@@ -3,8 +3,11 @@ using UnityEngine;
 
 public class CounterText : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI counter;
-    [SerializeField] private GlobalInputActivityDetector_Windows inputCounter;
+    [SerializeField]
+    private TextMeshProUGUI counter;
+
+    [SerializeField]
+    private GlobalInputActivityDetector_Windows inputCounter;
 
     private void Start()
     {
