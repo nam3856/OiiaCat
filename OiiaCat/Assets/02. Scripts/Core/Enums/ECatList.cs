@@ -3,5 +3,5 @@
     SpinningCat,
     PunchingCat,
     PopCat,
-
+    MaxwellCat,
 }
