@@ -247,18 +247,8 @@ if (text == string.Empty)
 1-j-(2). var 사용 금지 경우 : 메서드 반환 값이나 숫자 리터럴처럼 타입 추론이 모호할 경우, 명시적인 타입을 사용한다. (예: int, float같은 리터럴은 명시적인 타입으로 작성)
 
 
-1- k. 코루틴 사용 금지
-1-k-(1). 코루틴을 사용하지 않는다. 대신 UniTask를 사용한다. 2-c에서 자세히 설명한다.
-
-
-1- l. 비동기(Async/Await) 규칙
-1-l-(1). 비동기 메서드는 반드시 접미사 Async를 사용한다. (예: LoadDataAsync)
-
-1-l-(2). 비동기 메서드는 UniTask 또는 UniTask<T>를 반환해야 한다. async void는 사용을 금지하고, Unity의 이벤트 핸들러와 같이 await가 필요 없고 반환값이 없는 경우 UniTaskVoid를, await는 필요하지만 반환값이 없는 경우 UniTask를 사용한다.
-
-
-1- m. ReadOnly Collections
-1-m-(1). 변경을 제한하고 싶은 컬렉션에 readonly 키워드만 추가하면 새로 생성하는 것만 불가능할 뿐 기존 컬렉션에 Add / Remove는 가능하다. 따라서 런타임에 Add / Remove가 되면 안되는 Dictionary와 List가 있다면 ReadOnlyDictionary<T>, ReadOnlyList<T> 클래스를 사용한다.
+1- k. ReadOnly Collections
+1-k-(1). 변경을 제한하고 싶은 컬렉션에 readonly 키워드만 추가하면 새로 생성하는 것만 불가능할 뿐 기존 컬렉션에 Add / Remove는 가능하다. 따라서 런타임에 Add / Remove가 되면 안되는 Dictionary와 List가 있다면 ReadOnlyDictionary<T>, ReadOnlyList<T> 클래스를 사용한다.
 // Add / Remove 가능
 private readonly List<int> numList;
 private readonly Dictionary<int, int> numDict;
@@ -282,68 +272,6 @@ public SerializedDictionary<EStatType, Stat> StatDictionary;
 
 2-b. Inspector 가독성
 2-b-(1). 에디터의 Inspector에서 직접 할당해줘야 하는 [SerializeField] 혹은 public 필드의 경우, 할당 위치에 따라 VInspector의 FoldOut 어트리뷰트를 추가해준다. 이후 필드의 분류는 Header를 통해 진행한다.
-
-2- c. UniTask 사용 규칙
-2-c-(1). 메인스레드 기본 실행 원칙
-모든 비동기 로직은 특별한 지시가 없는 한 ‘메인 스레드’에서 실행되는 것을 기본으로 한다.
-메인 스레드 전환 (명시적 Wait) : 특정 작업의 실행이 끝날 때까지 기다렸다가 다시 메인 스레드에서 실행을 재개해야 할 경우 await UniTask.SwitchToMainThread()를 사용한다.
-프레임 루프 타이밍 : Update, LateUpdate, FixedUpdate 등 Unity의 프레임 루프 타이밍에 맞춰 비동기 작업을 재개해야 할 경우 UniTask.Yield(PlayerLoopTiming.DesiredTiming)을 명시하여 사용한다. (예: await UniTask.Yield(PlayerLoopTiming.LateUpdate))
-
-2-c-(2). 백그라운드 스레드 사용 (성능 최적화)
-CPU 부하가 크고 Unity API에 접근하지 않는 순수 C# 작업(예: 복잡한 계산, JSON 파싱, 파일 I/O 등)은 메인 스레드를 막지 않도록 백그라운드 스레드에서 실행해야 한다.
-스레드 전환 : 백그라운드 스레드로 작업을 전환할 때는 await UniTask.SwitchToThreadPool() 또는 UniTask.RunOnThreadPool(() => { ... })을 사용한다.
-스레드에서 Unity API 접근 금지 : 백그라운드 스레드 내에서는 GameObject, Transform, GetComponent 등 Unity의 API에 절대 접근해서는 안된다. Unity API 접근이 필요한 경우, 반드시 메인 스레드로 복귀해야 한다.
-private async UniTaskVoid TestTask()
-{
-    // 스레드 풀로 전환하여 백그라운드에서 실행
-    await UniTask.SwitchToThreadPool();
-
-    // 단순한 계산 작업 (예: 1부터 1000까지의 합 계산)
-    int result = 0;
-    for (int i = 1; i <= 1000; i++)
-    {
-        result += i;
-    }
-
-    // 메인 스레드로 전환
-    await UniTask.SwitchToMainThread();
-
-    // 메인 스레드에서 결과를 출력
-    Debug.Log("계산 완료. 최종 결과: " + result);
-}
-
-// 예시: 백그라운드에서 계산 후 메인 스레드 복귀
-var result = await UniTask.RunOnThreadPool(() => HeavyCalculation(data));
-// 이곳은 메인 스레드입니다. 안전하게 Unity API 사용 가능
-myTextComponent.text = result.ToString();
-
-2-c-(3). 취소 토큰(CancellationToken) 사용 의무화
-장기간 실행되는 비동기 메서드나, 사용자 입력에 의해 중단될 수 있는 비동기 작업에는 ‘CancellationToken’을 반드시 파라미터로 전달하여 작업 취소 메커니즘을 구현해야 한다.
-CancellationTokenSource: 취소를 요청하는 주체(예: UI 버튼 클릭, 오브젝트 파괴)는 CancellationTokenSource를 통해 토큰을 생성하고, 작업 중단 시 source.Cancel()을 호출해야 한다.
-UniTask의 취소: UniTask는 .WithCancellation(token) 메서드를 통해 취소 토큰을 주입할 수 있으며, await 지점에서 취소가 감지되면 자동으로 작업을 안전하게 종료한다.
-
-2-c-(4). 리턴 타입의 명확한 구분
-다음과 같이 비동기 메서드의 리턴 타입을 명확히 구분하여 사용한다.
-타입
-용도
-설명
-UniTask<T>
-반환 값이 필요한 비동기 작업
-작업 완료 후 특정 데이터를 반환해야 할 때 사용.
-UniTask
-반환 값이 없는 일반 비동기 작업
-비동기 호출을 기다려야 하지만, 결과 값은 필요 없을 때 사용.
-UniTaskVoid
-await가 필요 없는 최상위 비동기 메서드
-Unity 이벤트 핸들러(Start, Awake, Button.onClick 등)처럼 호출자가 완료를 기다리지 않는 최상위 메서드에만 사용. (async void의 안전한 대체제)
-
-
-2-c-(5). MonoBehaviour 라이프사이클을 사용한 종료 관리
-MonoBehaviour가 파괴될 때(OnDestroy) 진행 중이던 비동기 작업을 자동으로 취소하여 메모리 누수를 방지한다.
-ToUniTask 사용: 기존에 CancellationToken이 명시적으로 없는 상황일 경우, await가 필요한 Unity의 기본 비동기 함수(예: yield return null)를 UniTask로 변환할 때는 this.GetCancellationTokenOnDestroy()를 사용하여 해당 오브젝트 파괴 시 작업을 취소한다.
-// 오브젝트 파괴 시 자동으로 해당 Task는 취소됨
-await UniTask.Delay(TimeSpan.FromSeconds(1), ignoreTimeScale: true, cancellationToken: this.GetCancellationTokenOnDestroy());
-
 
 3. Github
 3-a. Commit Message Convention
