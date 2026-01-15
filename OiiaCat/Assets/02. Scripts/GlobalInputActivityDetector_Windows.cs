@@ -1,16 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 using UnityEngine;
 
 public class GlobalInputActivityDetector_Windows : MonoBehaviour
 {
     public event Action<uint> OnActivity; // "뭔가 입력이 있었다" 신호
 
-    [SerializeField] private bool runInBackground = true;
-    [SerializeField] private bool detectKeyboard = true;
-    [SerializeField] private bool detectMouseClick = true;
+    [SerializeField]
+    private bool runInBackground = true;
+
+    [SerializeField]
+    private bool detectKeyboard = true;
+
+    [SerializeField]
+    private bool detectMouseClick = true;
 
     private uint _activityCount = 0;
 
@@ -22,12 +28,12 @@ public class GlobalInputActivityDetector_Windows : MonoBehaviour
     private LowLevelKeyboardProc _keyboardProc;
     private LowLevelMouseProc _mouseProc;
 
-    // 메인 스레드에서 이벤트 호출을 위한 큐
-    private readonly object _lock = new object();
+    // lock-free 카운터
     private int _pendingActivityCount = 0;
 
     // 키 반복 필터링을 위한 눌린 키 추적
     private readonly HashSet<uint> _pressedKeys = new HashSet<uint>();
+    private readonly object _keyLock = new object();
 
     private void Awake()
     {
@@ -41,16 +47,30 @@ public class GlobalInputActivityDetector_Windows : MonoBehaviour
         {
             _keyboardProc = KeyboardHookCallback;
             _keyboardHookId = SetKeyboardHook(_keyboardProc);
+            if (_keyboardHookId == IntPtr.Zero)
+                UnityEngine.Debug.LogError($"Keyboard hook 설치 실패: {Marshal.GetLastWin32Error()}");
         }
 
         if (detectMouseClick)
         {
             _mouseProc = MouseHookCallback;
             _mouseHookId = SetMouseHook(_mouseProc);
+            if (_mouseHookId == IntPtr.Zero)
+                UnityEngine.Debug.LogError($"Mouse hook 설치 실패: {Marshal.GetLastWin32Error()}");
         }
     }
 
     private void OnDisable()
+    {
+        UninstallHooks();
+    }
+
+    private void OnApplicationQuit()
+    {
+        UninstallHooks();
+    }
+
+    private void UninstallHooks()
     {
         if (_keyboardHookId != IntPtr.Zero)
         {
@@ -64,8 +84,7 @@ public class GlobalInputActivityDetector_Windows : MonoBehaviour
             _mouseHookId = IntPtr.Zero;
         }
 
-        // Hook 해제 시 눌린 키 상태 초기화
-        lock (_lock)
+        lock (_keyLock)
         {
             _pressedKeys.Clear();
         }
@@ -73,13 +92,8 @@ public class GlobalInputActivityDetector_Windows : MonoBehaviour
 
     private void Update()
     {
-        // 메인 스레드에서 이벤트 발생
-        int pending;
-        lock (_lock)
-        {
-            pending = _pendingActivityCount;
-            _pendingActivityCount = 0;
-        }
+        // 메인 스레드에서 이벤트 발생 (lock-free)
+        int pending = Interlocked.Exchange(ref _pendingActivityCount, 0);
 
         for (int i = 0; i < pending; i++)
         {
@@ -90,10 +104,7 @@ public class GlobalInputActivityDetector_Windows : MonoBehaviour
 
     private void RegisterActivity()
     {
-        lock (_lock)
-        {
-            _pendingActivityCount++;
-        }
+        Interlocked.Increment(ref _pendingActivityCount);
     }
 
     #region Keyboard Hook
@@ -117,21 +128,20 @@ public class GlobalInputActivityDetector_Windows : MonoBehaviour
             if (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN)
             {
                 // 이미 눌려있는 키면 무시 (키 반복 필터링)
-                lock (_lock)
+                bool isNewPress;
+                lock (_keyLock)
                 {
-                    if (_pressedKeys.Contains(vkCode))
-                    {
-                        // 키 반복 - 무시
-                        return CallNextHookEx(_keyboardHookId, nCode, wParam, lParam);
-                    }
-                    _pressedKeys.Add(vkCode);
+                    isNewPress = _pressedKeys.Add(vkCode);
                 }
-                RegisterActivity();
+                if (isNewPress)
+                {
+                    RegisterActivity();
+                }
             }
             else if (msg == WM_KEYUP || msg == WM_SYSKEYUP)
             {
                 // 키 뗌 - 추적에서 제거
-                lock (_lock)
+                lock (_keyLock)
                 {
                     _pressedKeys.Remove(vkCode);
                 }
@@ -177,7 +187,7 @@ public class GlobalInputActivityDetector_Windows : MonoBehaviour
         {
             int msg = wParam.ToInt32();
             // 마우스 클릭만 감지 (이동 제외)
-            if (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || 
+            if (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN ||
                 msg == WM_MBUTTONDOWN || msg == WM_XBUTTONDOWN)
             {
                 RegisterActivity();
