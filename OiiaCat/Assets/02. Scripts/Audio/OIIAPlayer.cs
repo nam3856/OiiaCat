@@ -1,0 +1,94 @@
+﻿using System.Collections;
+using UnityEngine;
+using VInspector;
+
+public class OIIAPlayer : MonoBehaviour
+{
+    [Header("References")]
+    [SerializeField] 
+    private AudioSource _audioSource;
+
+    [SerializeField] 
+    private SerializedDictionary<ECatList, AudioClip> _audioClipDict;
+
+    [Header("Settings")]
+    [SerializeField]
+    private float _playDuration = 1f;
+
+    [SerializeField]
+    private bool _useUnscaledTime = false;
+
+
+    private float _endTime = 0f;
+    private Coroutine _watchCo = null;
+
+    private GlobalInputActivityDetector_Windows _globalInputActivityDetector;
+
+    private float Now => _useUnscaledTime ? Time.unscaledTime : Time.time;
+
+    private void Start()
+    {
+        _globalInputActivityDetector = FindAnyObjectByType<GlobalInputActivityDetector_Windows>();
+
+        if (_globalInputActivityDetector != null)
+        {
+            _globalInputActivityDetector.OnActivity += HandleInputActivityDetected;
+        }
+        else
+        {
+            Debug.LogWarning("GlobalInputActivityDetector_Windows not found in the scene.");
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_globalInputActivityDetector != null)
+        {
+            _globalInputActivityDetector.OnActivity -= HandleInputActivityDetected;
+        }
+
+        if (_watchCo != null)
+        {
+            StopCoroutine(_watchCo);
+            _watchCo = null;
+        }
+    }
+
+    public void ChangeClip(ECatList catlist)
+    {
+        if (_audioClipDict.TryGetValue(catlist, out var clip))
+        {
+            _audioSource.clip = clip;
+        }
+        else
+        {
+            Debug.LogWarning($"Audio clip for {catlist} not found.");
+        }
+    }
+
+    private void HandleInputActivityDetected(uint _)
+    {
+        if (!_audioSource.isPlaying)
+        {
+            _audioSource.Play();
+            _watchCo = StartCoroutine(CoWatchEnd());
+        }
+        _endTime = Now + _playDuration;
+
+    }
+
+    private IEnumerator CoWatchEnd()
+    {
+        while (Now < _endTime)
+            yield return null;
+
+        // Destroy된 객체 체크
+        if (_audioSource == null) yield break;
+
+        _audioSource.Stop();
+
+        _watchCo = null;
+    }
+
+
+}

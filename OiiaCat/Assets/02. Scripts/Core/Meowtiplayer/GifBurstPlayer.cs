@@ -110,6 +110,13 @@ public class GifBurstPlayer : MonoBehaviourPun
                 _inputCounter.OnActivity -= Trigger;
             }
         }
+
+        // 코루틴 정지
+        if (_watchCo != null)
+        {
+            StopCoroutine(_watchCo);
+            _watchCo = null;
+        }
     }
 
     /// <summary>
