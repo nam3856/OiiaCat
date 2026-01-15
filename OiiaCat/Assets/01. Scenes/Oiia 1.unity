@@ -743,6 +743,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _audioSource: {fileID: 1259428602}
+  _audioClipDict:
+    serializedKvps:
+    - Key: 0
+      Value: {fileID: 8300000, guid: 47b81fd83aaaafb4f9d205ecff550937, type: 3}
+      index: 0
+      isKeyRepeated: 0
+      isKeyNull: 0
+    - Key: 1
+      Value: {fileID: 0}
+      index: 1
+      isKeyRepeated: 0
+      isKeyNull: 0
+    - Key: 2
+      Value: {fileID: 0}
+      index: 2
+      isKeyRepeated: 0
+      isKeyNull: 0
+    - Key: 3
+      Value: {fileID: 0}
+      index: 3
+      isKeyRepeated: 0
+      isKeyNull: 0
+    dividerPos: 0.33
   _playDuration: 1
   _useUnscaledTime: 0
 --- !u!4 &1350275535

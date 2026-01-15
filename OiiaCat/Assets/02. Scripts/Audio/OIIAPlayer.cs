@@ -1,18 +1,20 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using VInspector;
 
 public class OIIAPlayer : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] 
     private AudioSource _audioSource;
+
     [SerializeField] 
-    private Dictionary<ECatList, AudioClip> _audioClip;
+    private SerializedDictionary<ECatList, AudioClip> _audioClipDict;
 
     [Header("Settings")]
     [SerializeField]
     private float _playDuration = 1f;
+
     [SerializeField]
     private bool _useUnscaledTime = false;
 
@@ -23,6 +25,7 @@ public class OIIAPlayer : MonoBehaviour
     private GlobalInputActivityDetector_Windows _globalInputActivityDetector;
 
     private float Now => _useUnscaledTime ? Time.unscaledTime : Time.time;
+
     private void Start()
     {
         _globalInputActivityDetector = FindAnyObjectByType<GlobalInputActivityDetector_Windows>();
@@ -53,13 +56,13 @@ public class OIIAPlayer : MonoBehaviour
 
     public void ChangeClip(ECatList catlist)
     {
-        if (_audioClip.ContainsKey(catlist))
+        if (_audioClipDict.TryGetValue(catlist, out var clip))
         {
-            _audioSource.clip = _audioClip[catlist];
+            _audioSource.clip = clip;
         }
         else
         {
-            Debug.LogWarning("Audio clip for " + catlist + " not found.");
+            Debug.LogWarning($"Audio clip for {catlist} not found.");
         }
     }
 
