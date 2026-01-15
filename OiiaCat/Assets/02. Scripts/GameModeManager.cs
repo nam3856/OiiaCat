@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using OiiaCat;
 
 /// <summary>
 /// 게임 모드 상태 관리 (로컬/멀티플레이어 전환)
@@ -7,8 +8,7 @@ using System;
 /// </summary>
 public class GameModeManager : MonoBehaviourSingleton<GameModeManager>
 {
-    public enum GameMode { Local, Multi }
-    public GameMode CurrentMode { get; private set; } = GameMode.Local;
+    public EGameMode CurrentMode { get; private set; } = EGameMode.Local;
 
     public event Action OnTransitionToMulti;
 
@@ -17,9 +17,9 @@ public class GameModeManager : MonoBehaviourSingleton<GameModeManager>
     /// </summary>
     public void RequestTransitionToMulti()
     {
-        if (CurrentMode == GameMode.Local)
+        if (CurrentMode == EGameMode.Local)
         {
-            CurrentMode = GameMode.Multi;
+            CurrentMode = EGameMode.Multi;
             OnTransitionToMulti?.Invoke();
             Debug.Log("[GameModeManager] Local → Multi transition");
         }
@@ -30,7 +30,7 @@ public class GameModeManager : MonoBehaviourSingleton<GameModeManager>
     /// </summary>
     public void ResetToLocal()
     {
-        CurrentMode = GameMode.Local;
+        CurrentMode = EGameMode.Local;
         Debug.Log("[GameModeManager] Reset to Local mode");
     }
 }
