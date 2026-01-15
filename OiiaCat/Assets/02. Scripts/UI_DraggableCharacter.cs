@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 /// <summary>
 /// UI 요소 드래그 가능하게 만드는 컴포넌트
 /// </summary>
-public class DraggableCharacter : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
+public class UI_DraggableCharacter : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
 {
     private Canvas _canvas;
     private RectTransform _rectTransform;

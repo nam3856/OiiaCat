@@ -10,9 +10,12 @@ using Photon.Realtime;
 public class PlayerManager : MonoBehaviourPunCallbacks
 {
     [Header("Spawn Settings")]
-    [SerializeField] private GameObject _playerPrefab;
-    [SerializeField] private Transform _canvasTransform;
-    [SerializeField] private Transform[] _spawnPoints;
+    [SerializeField]
+    private GameObject _playerPrefab;
+    [SerializeField]
+    private Transform _canvasTransform;
+    [SerializeField]
+    private Transform[] _spawnPoints;
 
     private GameObject _localPlayer;
     private bool _hasTransitionedToMulti;

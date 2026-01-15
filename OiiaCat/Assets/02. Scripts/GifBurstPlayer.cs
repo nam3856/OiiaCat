@@ -9,17 +9,27 @@ using Photon.Pun;
 [RequireComponent(typeof(PhotonView))]
 public class GifBurstPlayer : MonoBehaviourPun
 {
-    [SerializeField] private Animator _animator;
-    [SerializeField] private string _stateName = "Gif";
-    [SerializeField] private string _defaultStateName = "Idle";
-    [SerializeField] private float _playDuration = 0.5f;
-    [SerializeField] private bool _useUnscaledTime = false;
+    [SerializeField]
+    private Animator _animator;
+
+    [SerializeField]
+    private string _stateName = "Gif";
+
+    [SerializeField]
+    private string _defaultStateName = "Idle";
+
+    [SerializeField]
+    private float _playDuration = 0.5f;
+
+    [SerializeField]
+    private bool _useUnscaledTime = false;
 
     // 전역 입력 감지기 (자동으로 찾음)
     private GlobalInputActivityDetector_Windows _inputCounter;
 
     [Header("Behavior")]
-    [SerializeField] private bool _restartFromFirstFrameOnTrigger = false;
+    [SerializeField]
+    private bool _restartFromFirstFrameOnTrigger = false;
 
     private bool _isPlaying;
     private float _endTime;

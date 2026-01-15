@@ -11,20 +11,44 @@ using TMPro;
 public class Settings : MonoBehaviourPunCallbacks
 {
     [Header("Window Settings")]
-    [SerializeField] private UniWindowController _uniwinc;
-    [SerializeField] private Toggle _alwaysUpToggle;
-    [SerializeField] private Toggle _transparentToggle;    // 투명 토글
-    [SerializeField] private GameObject _backgroundGameObject;  // 배경 GameObject
+    [SerializeField]
+    private UniWindowController _uniwinc;
+
+    [SerializeField]
+    private Toggle _alwaysUpToggle;
+
+    [SerializeField]
+    private Toggle _transparentToggle;    // 투명 토글
+
+    [SerializeField]
+    private GameObject _backgroundGameObject;  // 배경 GameObject
 
     [Header("Photon Connection UI")]
-    [SerializeField] private TMP_InputField _nicknameInputField;
-    [SerializeField] private Button _nicknameConfirmButton;
-    [SerializeField] private TMP_InputField _roomNameInputField;
-    [SerializeField] private Button _joinRoomButton;
-    [SerializeField] private TextMeshProUGUI _statusText;
+    [SerializeField]
+    private TMP_InputField _nicknameInputField;
+
+    [SerializeField]
+    private Button _nicknameConfirmButton;
+
+    [SerializeField]
+    private TMP_InputField _roomNameInputField;
+
+    [SerializeField]
+    private Button _joinRoomButton;
+
+    [SerializeField]
+    private TextMeshProUGUI _statusText;
 
     [Header("Room Settings")]
-    [SerializeField] private byte _maxPlayers = 4;
+    [SerializeField]
+    private byte _maxPlayers = 4;
+
+    // 상수 (스타일 가이드 1-i-(1))
+    private const string DEFAULT_ROOM_NAME = "OiiaRoom";
+    private const string DEFAULT_NICKNAME_PREFIX = "Player";
+    private const int MIN_NICKNAME_NUMBER = 1000;
+    private const int MAX_NICKNAME_NUMBER = 9999;
+    private const string GAME_VERSION = "1";
 
     private bool _isConnecting;
 
@@ -71,7 +95,7 @@ public class Settings : MonoBehaviourPunCallbacks
         // 방 이름 입력 필드 초기화
         if (_roomNameInputField != null)
         {
-            _roomNameInputField.text = "OiiaRoom";
+            _roomNameInputField.text = DEFAULT_ROOM_NAME;
         }
     }
 
@@ -119,7 +143,7 @@ public class Settings : MonoBehaviourPunCallbacks
         }
 
         // 방 이름 가져오기
-        string roomName = "OiiaRoom";
+        string roomName = DEFAULT_ROOM_NAME;
         if (_roomNameInputField != null && !string.IsNullOrWhiteSpace(_roomNameInputField.text))
         {
             roomName = _roomNameInputField.text;
@@ -133,7 +157,7 @@ public class Settings : MonoBehaviourPunCallbacks
         else if (string.IsNullOrWhiteSpace(PhotonNetwork.NickName))
         {
             // 랜덤 닉네임 생성
-            PhotonNetwork.NickName = $"Player{Random.Range(1000, 9999)}";
+            PhotonNetwork.NickName = $"{DEFAULT_NICKNAME_PREFIX}{Random.Range(MIN_NICKNAME_NUMBER, MAX_NICKNAME_NUMBER)}";
         }
 
         _isConnecting = true;
@@ -161,7 +185,7 @@ public class Settings : MonoBehaviourPunCallbacks
         else
         {
             PhotonNetwork.ConnectUsingSettings();
-            PhotonNetwork.GameVersion = "1";
+            PhotonNetwork.GameVersion = GAME_VERSION;
         }
     }
 
@@ -174,7 +198,7 @@ public class Settings : MonoBehaviourPunCallbacks
     public override void OnJoinedLobby()
     {
         // 방 이름 가져오기
-        string roomName = "OiiaRoom";
+        string roomName = DEFAULT_ROOM_NAME;
         if (_roomNameInputField != null && !string.IsNullOrWhiteSpace(_roomNameInputField.text))
         {
             roomName = _roomNameInputField.text;

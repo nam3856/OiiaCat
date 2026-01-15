@@ -11,15 +11,21 @@ using Cysharp.Threading.Tasks;
 public class PlayerCharacter : MonoBehaviourPun
 {
     [Header("UI References")]
-    [SerializeField] private GameObject _menuButton;                  // 메뉴 버튼 (자신에게만 보임)
-    [SerializeField] private TextMeshProUGUI _infoText;             // 정보 텍스트 (내: 클릭수, 남: 이름)
-    [SerializeField] private Transform _canvasTransform;            // Canvas Transform (프리팹에서 할당)
+    [SerializeField]
+    private GameObject _menuButton;                  // 메뉴 버튼 (자신에게만 보임)
+
+    [SerializeField]
+    private TextMeshProUGUI _infoText;             // 정보 텍스트 (내: 클릭수, 남: 이름)
+
+    [SerializeField]
+    private Transform _canvasTransform;            // Canvas Transform (프리팹에서 할당)
 
     // 전역 입력 감지기 (자동으로 찾음)
     private GlobalInputActivityDetector_Windows _inputDetector;
 
     // 클릭수 (PhotonView로 동기화됨)
-    [SerializeField] private int _clickCount;
+    [SerializeField]
+    private int _clickCount;
 
     // 로컬 모드 플래그 (Photon 연결 없이 실행 시)
     private bool _isLocalMode = false;
@@ -169,9 +175,9 @@ public class PlayerCharacter : MonoBehaviourPun
         }
 
         // 드래그 가능하게 추가
-        if (GetComponent<DraggableCharacter>() == null)
+        if (GetComponent<UI_DraggableCharacter>() == null)
         {
-            gameObject.AddComponent<DraggableCharacter>();
+            gameObject.AddComponent<UI_DraggableCharacter>();
         }
 
         Debug.Log("Local Player Spawned");
@@ -189,9 +195,9 @@ public class PlayerCharacter : MonoBehaviourPun
         }
 
         // 드래그 가능하게 추가 (모든 캐릭터 드래그 가능)
-        if (GetComponent<DraggableCharacter>() == null)
+        if (GetComponent<UI_DraggableCharacter>() == null)
         {
-            gameObject.AddComponent<DraggableCharacter>();
+            gameObject.AddComponent<UI_DraggableCharacter>();
         }
 
         Debug.Log($"Remote Player Spawned: {photonView.Owner.NickName}");
