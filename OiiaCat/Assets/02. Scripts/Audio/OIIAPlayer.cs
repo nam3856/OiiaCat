@@ -19,7 +19,6 @@ public class OIIAPlayer : MonoBehaviour
 
 
     private float _endTime = 0f;
-    private bool _isPlaying = false;
     private Coroutine _watchCo = null;
 
     private GlobalInputActivityDetector_Windows _globalInputActivityDetector;
@@ -36,6 +35,20 @@ public class OIIAPlayer : MonoBehaviour
         else
         {
             Debug.LogWarning("GlobalInputActivityDetector_Windows not found in the scene.");
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_globalInputActivityDetector != null)
+        {
+            _globalInputActivityDetector.OnActivity -= HandleInputActivityDetected;
+        }
+
+        if (_watchCo != null)
+        {
+            StopCoroutine(_watchCo);
+            _watchCo = null;
         }
     }
 
@@ -72,7 +85,6 @@ public class OIIAPlayer : MonoBehaviour
 
         _audioSource.Stop();
 
-        _isPlaying = false;
         _watchCo = null;
     }
 

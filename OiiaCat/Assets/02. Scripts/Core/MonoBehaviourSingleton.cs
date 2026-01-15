@@ -17,7 +17,7 @@ public abstract class MonoBehaviourSingleton<T> : MonoBehaviour where T : MonoBe
         {
             if (_instance == null)
             {
-                _instance = FindObjectOfType<T>();
+                _instance = FindAnyObjectByType<T>();
 
                 if (_instance == null)
                 {
