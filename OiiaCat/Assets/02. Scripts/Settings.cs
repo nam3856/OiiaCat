@@ -13,6 +13,8 @@ public class Settings : MonoBehaviourPunCallbacks
     [Header("Window Settings")]
     [SerializeField] private UniWindowController _uniwinc;
     [SerializeField] private Toggle _alwaysUpToggle;
+    [SerializeField] private Toggle _transparentToggle;    // 투명 토글
+    [SerializeField] private GameObject _backgroundGameObject;  // 배경 GameObject
 
     [Header("Photon Connection UI")]
     [SerializeField] private TMP_InputField _nicknameInputField;
@@ -39,6 +41,13 @@ public class Settings : MonoBehaviourPunCallbacks
         {
             _alwaysUpToggle.isOn = _uniwinc.isTopmost;
             _alwaysUpToggle.onValueChanged.AddListener(OnAlwaysUpToggleChanged);
+        }
+
+        // 투명 토글 초기화
+        if (_transparentToggle != null)
+        {
+            _transparentToggle.isOn = _uniwinc.isTransparent;
+            _transparentToggle.onValueChanged.AddListener(OnTransparentToggleChanged);
         }
 
         // 닉네임 확인 버튼 초기화
@@ -69,6 +78,19 @@ public class Settings : MonoBehaviourPunCallbacks
     private void OnAlwaysUpToggleChanged(bool isOn)
     {
         _uniwinc.isTopmost = isOn;
+    }
+
+    /// <summary>
+    /// 투명 토글 변경 시 호출
+    /// </summary>
+    private void OnTransparentToggleChanged(bool isOn)
+    {
+        // 배경 GameObject 켜고 끄기
+        if (_backgroundGameObject != null)
+        {
+            _backgroundGameObject.SetActive(!isOn);  // 투명이면 BG 끄기
+            Debug.Log($"[Settings] Transparent mode: {isOn}, Background active: {!isOn}");
+        }
     }
 
     private void OnNicknameConfirmClicked()
@@ -223,6 +245,11 @@ public class Settings : MonoBehaviourPunCallbacks
         if (_alwaysUpToggle != null)
         {
             _alwaysUpToggle.onValueChanged.RemoveListener(OnAlwaysUpToggleChanged);
+        }
+
+        if (_transparentToggle != null)
+        {
+            _transparentToggle.onValueChanged.RemoveListener(OnTransparentToggleChanged);
         }
 
         if (_nicknameConfirmButton != null)

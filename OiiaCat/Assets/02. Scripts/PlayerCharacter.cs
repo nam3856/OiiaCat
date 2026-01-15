@@ -1,6 +1,8 @@
+using System.Threading;
 using UnityEngine;
 using Photon.Pun;
 using TMPro;
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// 멀티플레이어 플레이어 캐릭터 - 자신만 메뉴 버튼 활성화, 전역 입력 감지로 클릭수 저장
@@ -22,16 +24,21 @@ public class PlayerCharacter : MonoBehaviourPun
     // 로컬 모드 플래그 (Photon 연결 없이 실행 시)
     private bool _isLocalMode = false;
 
-    private void Start()
+    /// <summary>
+    /// 시작 시 비동기 초기화 (UniTask 사용)
+    /// </summary>
+    private async UniTaskVoid Start()
     {
-        // 코루틴으로 PhotonView 초기화 대기
-        StartCoroutine(InitializeWhenReady());
+        // 취소 토큰 연결 (GameObject 파괴 시 자동 취소)
+        var cts = this.GetCancellationTokenOnDestroy();
+
+        await InitializeAsync(cts);
     }
 
     /// <summary>
-    /// PhotonView가 준비될 때까지 기다린 후 초기화
+    /// 비동기 초기화 (UniTask 사용)
     /// </summary>
-    private System.Collections.IEnumerator InitializeWhenReady()
+    private async UniTask InitializeAsync(CancellationToken cancellationToken)
     {
         // 멀티 모드에서는 Canvas 설정 먼저 실행 (모든 클라이언트에서)
         if (!_isLocalMode)
@@ -57,14 +64,11 @@ public class PlayerCharacter : MonoBehaviourPun
             }
 
             UpdateInfoText();
-            yield break;
+            return;
         }
 
         // 멀티 모드에서는 PhotonView 준비 대기
-        while (photonView == null || photonView.ViewID == 0)
-        {
-            yield return null;
-        }
+        await UniTask.WaitUntil(() => photonView != null && photonView.ViewID != 0, cancellationToken: cancellationToken);
 
         Debug.Log($"[PlayerCharacter] PhotonView ready. IsMine: {photonView.IsMine}, ViewID: {photonView.ViewID}");
 

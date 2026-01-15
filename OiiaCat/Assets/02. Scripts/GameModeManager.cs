@@ -3,28 +3,14 @@ using System;
 
 /// <summary>
 /// 게임 모드 상태 관리 (로컬/멀티플레이어 전환)
+/// 저장소 스타일 가이드 1-e-(1) 규칙에 따른 싱글톤 구현
 /// </summary>
-public class GameModeManager : MonoBehaviour
+public class GameModeManager : MonoBehaviourSingleton<GameModeManager>
 {
-    public static GameModeManager Instance { get; private set; }
-
     public enum GameMode { Local, Multi }
     public GameMode CurrentMode { get; private set; } = GameMode.Local;
 
     public event Action OnTransitionToMulti;
-
-    private void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
 
     /// <summary>
     /// 멀티플레이어 모드로 전환 요청
