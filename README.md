@@ -1,3 +1,4 @@
+<img src="https://img.shields.io/github/last-commit/nam3856/OiiaCat?style=flat&logo=git&logoColor=white&color=0080ff">
 # OiiaCat
 <img src = "https://images.squarespace-cdn.com/content/v1/663f738a89dc02694adb8670/ab586c91-6b0b-4791-aa5a-b60824f92094/OIIA-Website-loop.gif">
 
