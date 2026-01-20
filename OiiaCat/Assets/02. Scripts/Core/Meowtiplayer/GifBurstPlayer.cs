@@ -72,45 +72,94 @@ public class GifBurstPlayer : MonoBehaviourPun
     }
 
     /// <summary>
-    /// Start 시 로컬 캐릭터인 경우 입력 감지기 구독
+    /// Start 시 입력 감지기 찾기
     /// </summary>
     private void Start()
     {
-        // 로컬 모드 체크
-        bool isLocalMode = !PhotonNetwork.InRoom;
-
-        // 로컬 모드이거나 내 캐릭터인 경우에만 입력 감지
-        if (isLocalMode || photonView.IsMine)
+        // 전역 입력 감지기 자동으로 찾기
+        _inputCounter = GameObject.FindAnyObjectByType<GlobalInputActivityDetector_Windows>();
+        if (_inputCounter == null)
         {
-            // 전역 입력 감지기 자동으로 찾기
-            _inputCounter = GameObject.FindAnyObjectByType<GlobalInputActivityDetector_Windows>();
-            if (_inputCounter != null)
-            {
-                _inputCounter.OnActivity += Trigger;
-                Debug.Log($"[GifBurstPlayer] Subscribed to input events (LocalMode: {isLocalMode}, IsMine: {photonView.IsMine})");
-            }
-            else
-            {
-                Debug.LogWarning("GlobalInputActivityDetector_Windows not found in scene!");
-            }
+            Debug.LogWarning("GlobalInputActivityDetector_Windows not found in scene!");
         }
     }
 
     /// <summary>
-    /// 오브젝트 파괴 시 이벤트 구독 해제
+    /// 활성화 시 입력 감지기 구독 (SetActive(true) 시 호출)
     /// </summary>
-    private void OnDestroy()
+    private void OnEnable()
     {
-        // 이벤트 구독 해제
-        if (_inputCounter != null)
+        // 입력 감지기가 없으면 찾기 (OnEnable이 Start보다 먼저 호출될 수 있음)
+        if (_inputCounter == null)
         {
-            bool isLocalMode = !PhotonNetwork.InRoom;
-            if (isLocalMode || photonView.IsMine)
+            _inputCounter = GameObject.FindAnyObjectByType<GlobalInputActivityDetector_Windows>();
+            if (_inputCounter == null)
             {
-                _inputCounter.OnActivity -= Trigger;
+                Debug.LogWarning("GlobalInputActivityDetector_Windows not found in scene!");
+                return;
             }
         }
 
+        // 로컬 모드 체크
+        bool isLocalMode = !PhotonNetwork.InRoom;
+
+        // 로컬 모드이거나 내 캐릭터인 경우에만 입력 감지 구독
+        bool shouldSubscribe = isLocalMode || (photonView != null && photonView.IsMine);
+        if (shouldSubscribe)
+        {
+            _inputCounter.OnActivity += Trigger;
+            Debug.Log($"[GifBurstPlayer] Subscribed to input events (LocalMode: {isLocalMode}, IsMine: {photonView?.IsMine})");
+        }
+    }
+
+    /// <summary>
+    /// 비활성화 시 입력 감지기 구독 해제 (SetActive(false) 시 호출)
+    /// </summary>
+    private void OnDisable()
+    {
+        Debug.Log("[GifBurstPlayer] OnDisable called");
+
+        // 재생 상태 리셋 (코루틴이 멈추므로 플래그도 리셋)
+        _isPlaying = false;
+        _watchCo = null;
+
+        // 입력 감지기가 없으면 찾기
+        if (_inputCounter == null)
+        {
+            _inputCounter = GameObject.FindAnyObjectByType<GlobalInputActivityDetector_Windows>();
+            Debug.Log($"[GifBurstPlayer] _inputCounter was null, found: {_inputCounter != null}");
+        }
+
+        // 입력 감지기가 여전히 없으면 리턴
+        if (_inputCounter == null)
+        {
+            Debug.LogWarning("[GifBurstPlayer] _inputCounter is still null, cannot unsubscribe");
+            return;
+        }
+
+        // 로컬 모드 체크
+        bool isLocalMode = !PhotonNetwork.InRoom;
+
+        // 로컬 모드이거나 내 캐릭터인 경우에만 구독 해제
+        bool shouldUnsubscribe = isLocalMode || (photonView != null && photonView.IsMine);
+        Debug.Log($"[GifBurstPlayer] shouldUnsubscribe: {shouldUnsubscribe}, isLocalMode: {isLocalMode}, photonView?.IsMine: {photonView?.IsMine}");
+
+        if (shouldUnsubscribe)
+        {
+            _inputCounter.OnActivity -= Trigger;
+            Debug.Log($"[GifBurstPlayer] Unsubscribed from input events");
+        }
+        else
+        {
+            Debug.Log($"[GifBurstPlayer] Skipped unsubscribe (shouldUnsubscribe: {shouldUnsubscribe})");
+        }
+    }
+
+    /// <summary>
+    /// 오브젝트 파괴 시 코루틴 정지
+    /// </summary>
+    private void OnDestroy()
+    {
         // 코루틴 정지
         if (_watchCo != null)
         {
@@ -157,6 +206,12 @@ public class GifBurstPlayer : MonoBehaviourPun
     /// <param name="count">입력 카운트</param>
     public void Trigger(uint count)
     {
+        // GameObject가 비활성화되어 있으면 무시
+        if (!gameObject.activeInHierarchy)
+        {
+            return;
+        }
+
         // Destroy된 객체 체크
         if (this == null) return;
         if (_animator == null) return;
@@ -166,6 +221,8 @@ public class GifBurstPlayer : MonoBehaviourPun
 
         // 내 캐릭터인지 확인 (로컬 모드이거나 IsMine)
         if (!isLocalMode && !photonView.IsMine) return;
+
+        Debug.Log($"[GifBurstPlayer] Trigger called on {gameObject.name}, activeInHierarchy: {gameObject.activeInHierarchy}");
 
         // 재생할 애니메이션 선택
         string selectedState = GetNextStateName();
@@ -201,6 +258,15 @@ public class GifBurstPlayer : MonoBehaviourPun
     /// <param name="stateName">재생할 애니메이션 상태 이름</param>
     private void PlayAnimation(string stateName)
     {
+        // GameObject가 비활성화되어 있으면 재생하지 않음
+        if (!gameObject.activeInHierarchy)
+        {
+            Debug.Log($"[GifBurstPlayer] PlayAnimation skipped - GameObject not active");
+            return;
+        }
+
+        Debug.Log($"[GifBurstPlayer] PlayAnimation: stateName={stateName}, _isPlaying={_isPlaying}, _animator={_animator != null}");
+
         // "마지막 입력 기준 0.5초"로 종료 시각 갱신
         _endTime = Now + _playDuration;
 

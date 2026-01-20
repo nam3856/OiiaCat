@@ -4,12 +4,17 @@ using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
+using System.Collections.Generic;
+using System;
+using Random = UnityEngine.Random;
 
 /// <summary>
 /// 창 설정 및 포톤 멀티플레이어 연결 관리
 /// </summary>
+[RequireComponent(typeof(PhotonView))]
 public class Settings : MonoBehaviourPunCallbacks
 {
+    private PhotonView _photonView;
     [Header("Menu Buttons")]
     [SerializeField]
     private Button _menuButton;
@@ -55,6 +60,13 @@ public class Settings : MonoBehaviourPunCallbacks
     [SerializeField]
     private byte _maxPlayers = 4;
 
+    [Header("Cat Selection")]
+    [SerializeField]
+    private List<Button> _catButtonList;
+
+    [SerializeField]
+    private List<GameObject> _catObjectList;
+
     // 상수 (스타일 가이드 1-i-(1))
     private const string DEFAULT_ROOM_NAME = "OiiaRoom";
     private const string DEFAULT_NICKNAME_PREFIX = "Player";
@@ -66,6 +78,9 @@ public class Settings : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        // PhotonView 초기화
+        _photonView = GetComponent<PhotonView>();
+
         // UniWindowController 초기화
         if (_uniwinc == null)
         {
@@ -131,6 +146,105 @@ public class Settings : MonoBehaviourPunCallbacks
         {
             _roomNameInputField.text = DEFAULT_ROOM_NAME;
         }
+
+        // 고양이 선택 버튼 초기화
+        InitializeCatSelectionButtons();
+    }
+
+    /// <summary>
+    /// 고양이 선택 버튼 초기화
+    /// </summary>
+    private void InitializeCatSelectionButtons()
+    {
+        if (_catButtonList == null || _catObjectList == null)
+        {
+            return;
+        }
+
+        // 버튼과 오브젝트 개수가 일치하지 않으면 경고
+        if (_catButtonList.Count != _catObjectList.Count)
+        {
+            Debug.LogWarning("[Settings] CatButtonList와 CatObjectList의 개수가 일치하지 않습니다.");
+            return;
+        }
+
+        // 각 버튼에 리스너 추가
+        for (int i = 0; i < _catButtonList.Count; i++)
+        {
+            int index = i; // 클로저 캡처를 위한 복사
+            if (_catButtonList[i] != null)
+            {
+                _catButtonList[i].onClick.AddListener(() => OnCatSelectionButtonClicked(index));
+            }
+        }
+
+        // 첫 번째 고양이 오브젝트 활성화 (나머지 비활성화)
+        if (_catObjectList.Count > 0)
+        {
+            ActivateCatObject(0);
+        }
+    }
+
+    /// <summary>
+    /// 고양이 선택 버튼 클릭 시 호출
+    /// </summary>
+    /// <param name="index">선택된 고양이 인덱스</param>
+    private void OnCatSelectionButtonClicked(int index)
+    {
+        // 로컬에서 활성화
+        ActivateCatObject(index);
+
+        // 멀티플레이 모드에서는 다른 플레이어에게도 전송
+        if (PhotonNetwork.InRoom && _photonView != null)
+        {
+            _photonView.RPC(nameof(RPCChangeCat), RpcTarget.Others, index);
+            Debug.Log($"[Settings] RPC로 고양이 {index}번 변경 전송");
+        }
+    }
+
+    /// <summary>
+    /// 지정된 인덱스의 고양이 오브젝트만 활성화하고 나머지는 비활성화
+    /// </summary>
+    /// <param name="index">활성화할 고양이 오브젝트 인덱스</param>
+    public void ActivateCatObject(int index)
+    {
+        if (_catObjectList == null || index < 0 || index >= _catObjectList.Count)
+        {
+            Debug.LogWarning($"[Settings] 잘못된 고양이 인덱스: {index}");
+            return;
+        }
+
+        for (int i = 0; i < _catObjectList.Count; i++)
+        {
+            if (_catObjectList[i] != null)
+            {
+                _catObjectList[i].SetActive(i == index);
+            }
+        }
+
+        // 활성화된 고양이의 애니메이션 실행
+        GameObject activeCat = _catObjectList[index];
+        if (activeCat != null)
+        {
+            var gifPlayer = activeCat.GetComponent<GifBurstPlayer>();
+            if (gifPlayer != null)
+            {
+                gifPlayer.Trigger(1);
+            }
+        }
+
+        Debug.Log($"[Settings] 고양이 {index}번 활성화");
+    }
+
+    /// <summary>
+    /// 다른 플레이어에게 고양이 변경 전송 (RPC)
+    /// </summary>
+    /// <param name="index">선택한 고양이 인덱스</param>
+    [PunRPC]
+    private void RPCChangeCat(int index)
+    {
+        ActivateCatObject(index);
+        Debug.Log($"[Settings] RPC로 고양이 {index}번 변경 받음");
     }
 
     /// <summary>
@@ -360,6 +474,18 @@ public class Settings : MonoBehaviourPunCallbacks
         if (_joinRoomButton != null)
         {
             _joinRoomButton.onClick.RemoveListener(OnJoinRoomClicked);
+        }
+
+        // 고양이 선택 버튼 리스너 제거
+        if (_catButtonList != null)
+        {
+            foreach (var button in _catButtonList)
+            {
+                if (button != null)
+                {
+                    button.onClick.RemoveAllListeners();
+                }
+            }
         }
     }
 }

@@ -240,17 +240,6 @@ MonoBehaviour:
   runInBackground: 1
   detectKeyboard: 1
   detectMouseClick: 1
---- !u!114 &193245375 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2416199871598626845, guid: e893aefd93740714b999573b02916984, type: 3}
-  m_PrefabInstance: {fileID: 1759267239}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb951500192d2430eb3e306480cc2f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &442973796
 GameObject:
   m_ObjectHideFlags: 0
@@ -433,10 +422,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f906e77aaba4fc04fa142c78bca6ad26, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniwinc: {fileID: 193245375}
+  _menuButton: {fileID: 0}
+  _catButton: {fileID: 0}
+  _menuPanel: {fileID: 0}
+  _catPanel: {fileID: 0}
+  _uniwinc: {fileID: 0}
   _alwaysUpToggle: {fileID: 797621581}
   _transparentToggle: {fileID: 1940670963}
-  _background: {fileID: 2041012527}
+  _backgroundGameObject: {fileID: 0}
+  _nicknameInputField: {fileID: 0}
+  _nicknameConfirmButton: {fileID: 0}
+  _roomNameInputField: {fileID: 0}
+  _joinRoomButton: {fileID: 0}
+  _statusText: {fileID: 0}
+  _maxPlayers: 4
 --- !u!114 &508457510
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1525,6 +1524,7 @@ GameObject:
   - component: {fileID: 1380399730}
   - component: {fileID: 1380399733}
   - component: {fileID: 1380399732}
+  - component: {fileID: 1380399734}
   m_Layer: 5
   m_Name: Cat
   m_TagString: Untagged
@@ -1601,13 +1601,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d32c3bf46bee1494d93d507b62fb58a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animator: {fileID: 1380399733}
-  stateName: Gif
-  defaultStateName: Idle
-  playDuration: 0.5
-  useUnscaledTime: 0
-  inputCounter: {fileID: 122459406}
-  restartFromFirstFrameOnTrigger: 0
+  _animator: {fileID: 0}
+  _stateNames:
+  - Gif
+  _playMode: 0
+  _defaultStateName: Idle
+  _playDuration: 0.5
+  _useUnscaledTime: 0
+  _restartFromFirstFrameOnTrigger: 0
 --- !u!95 &1380399733
 Animator:
   serializedVersion: 7
@@ -1630,6 +1631,28 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1380399734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1380399728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 1
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1457334870
 GameObject:
   m_ObjectHideFlags: 0
